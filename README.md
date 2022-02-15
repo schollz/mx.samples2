@@ -81,6 +81,13 @@ the current samples are from the following sources, which are free and do not re
 - the pianobook which states that ["There are NO restrictions on their use (except selling them on as your own samples)"](https://www.pianobook.co.uk/faq/)
 
 
+
+## TODO:
+
+- hook up delay
+- delete old parameters
+- rewrite README
+
 ## download
 
 `;install https://github.com/schollz/mx.samples`
