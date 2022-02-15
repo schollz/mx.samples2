@@ -55,8 +55,8 @@ MxSamplesInstrument {
 			"sustain", 1.0,
 			"release", 1.0,
 			"fadetime",1.0,
-			"delaysend",0.1,
-			"reverbsend",0.1,
+			"delaysend",0.0,
+			"reverbsend",0.0,
 		]);
 
 
@@ -92,7 +92,6 @@ MxSamplesInstrument {
 			arg out=0,pan=0,amp=1.0,
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
-			fade_trig=0,fade_time=0.1,
 			attack=0.01,decay=0.1,sustain=1.0,release=1,gate=1,
 			startPos=0,lpf=18000,
 			busReverb,busDelay,sendReverb=0,sendDelay=0;
@@ -104,7 +103,6 @@ MxSamplesInstrument {
 			snd2=PlayBuf.ar(2,buf2,rate,t_trig,startPos:startPos*frames2,doneAction:Select.kr(frames2>frames1,[0,2]));
 			snd=SelectX.ar(buf1mix,[snd2,snd]);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
-			snd=snd*EnvGen.ar(Env.new([1,0],[fade_time]),fade_trig,doneAction:2);
 			DetectSilence.ar(snd,0.00001,doneAction:2);
 			snd=Balance2.ar(snd[0],snd[1],pan,amp);
 			Out.ar(out,snd);
@@ -116,7 +114,6 @@ MxSamplesInstrument {
 			arg out=0,pan=0,amp=1.0,
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
-			fade_trig=0,fade_time=0.1,
 			attack=0.01,decay=0.1,sustain=1.0,release=1,gate=1,
 			startPos=0,lpf=18000,
 			busReverb,busDelay,sendReverb=0,sendDelay=0;
@@ -128,7 +125,6 @@ MxSamplesInstrument {
 			snd2=PlayBuf.ar(1,buf2,rate,t_trig,startPos:startPos*frames2,doneAction:Select.kr(frames2>frames1,[0,2]));
 			snd=SelectX.ar(buf1mix,[snd2,snd]);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
-			snd=snd*EnvGen.ar(Env.new([1,0],[fade_time]),fade_trig,doneAction:2);
 			DetectSilence.ar(snd,0.00001,doneAction:2);
 			snd=Pan2.ar(snd,pan,amp);
 			Out.ar(out,snd);
@@ -136,9 +132,6 @@ MxSamplesInstrument {
 			Out.ar(busDelay,snd*sendDelay);
 		}).send(server);
 
-	}
-
-	garbageCollect {
 		Routine {
 			loop {
 				1.wait;
@@ -150,6 +143,19 @@ MxSamplesInstrument {
 			}
 		}.play;
 	}
+
+	// garbageCollect {
+	// 	Routine {
+	// 		loop {
+	// 			1.wait;
+	// 			while ({buf.size>maxSamples},{
+	// 				var toRemove=buf.keys.asArray[0];
+	// 				("removing "++toRemove).postln;
+	// 				buf.put(toRemove,nil);
+	// 			});
+	// 		}
+	// 	}.play;
+	// }
 
 	setParam {
 		arg key,value;
@@ -288,6 +294,7 @@ MxSamplesInstrument {
 
 	noteOff {
 		arg note;
+		var keys;
 		voicesOn.removeAt(note);
 		if (pedalSustainOn==true,{
 			pedalSustainNotes.put(note,1);
@@ -297,12 +304,17 @@ MxSamplesInstrument {
 			},{
 				// remove the sound
 				if (syn.at(note).notNil,{
-					syn.at(note).keysValuesDo({ arg k,v;
-						if (v.isRunning,{
-							v.set(\gate,0);
-						},{
-							syn.at(note).set(k,nil);
-						})
+					keys=syn.at(note).keys.asArray;
+					keys.do({ arg k,i;
+						var v=syn.at(note).at(k);
+						if (v.notNil,{
+							if (v.isRunning,{
+								if (v.isPlaying,{
+									syn.at(note).removeAt(k);
+									v.set(\gate,0,\release,params.at("fadetime"));
+								});
+							});
+						});
 					});
 				});
 			});
@@ -312,13 +324,19 @@ MxSamplesInstrument {
 
 	noteFade {
 		arg note;
+		var keys;
 		if (syn.at(note).notNil,{
-			syn.at(note).keysValuesDo({ arg k,v;
-				if (v.isRunning,{
-					v.set(\fade_trig,1,\fade_time,params.at("fadetime"));
-				},{
-					syn.at(note).set(k,nil);
-				})
+			keys=syn.at(note).keys.asArray;
+			keys.do({ arg k,i;
+				var v=syn.at(note).at(k);
+				if (v.notNil,{
+					if (v.isRunning,{
+						if (v.isPlaying,{
+							syn.at(note).removeAt(k);
+							v.set(\gate,0,\release,params.at("fadetime"));
+						});
+					});
+				});
 			});
 		});
 	}
@@ -327,13 +345,14 @@ MxSamplesInstrument {
 	doPlay {
 		arg note,amp,file1,file2,buf1mix,rate;
 		var notename=1000000.rand;
-		[notename,note,amp,file1,file2,buf1mix,rate].postln;
+		var node;
+		//[notename,note,amp,file1,file2,buf1mix,rate].postln;
 		// check if sound is loaded and unload it
 		if (syn.at(note).isNil,{
 			syn.put(note,Dictionary.new());
 		});
 		this.noteFade(note);
-		syn.at(note).put(notename,Synth.head(server,"playx"++buf.at(file1).numChannels,[
+		node=Synth.head(server,"playx"++buf.at(file1).numChannels,[
 			\out,0,
 			\amp,params.at("amp"),
 			\pan,params.at("pan"),
@@ -350,11 +369,11 @@ MxSamplesInstrument {
 			\busReverb,busReverb,
 			\sendReverb,params.at("reverbsend"),
 		]).onFree({
-			"freeing "++notename;
-			syn.at(note).put(notename,nil);
-		}));
+			syn.at(note).removeAt(notename);
+		});
+		syn.at(note).put(notename,node);
 		voicesOn.put(note,1);
-		NodeWatcher.register(syn.at(note).at(notename));
+		NodeWatcher.register(node,true);
 	}
 
 

@@ -1,4 +1,4 @@
-skeys-- mx.samples v2.0.0
+-- mx.samples v2.0.0
 -- download and play samples
 --
 -- llllllll.co/t/mxsamples2
@@ -8,10 +8,9 @@ skeys-- mx.samples v2.0.0
 -- 3. profit.
 
 local UI=require "ui"
-mxsamples=include("mx.samples2/lib/mx.samples2")
 
 engine.name="MxSamples2"
-skeys=nil
+mxsamples=nil
 uilist=nil
 downloading=false
 download_available=0
@@ -93,12 +92,13 @@ function init()
   print(cmd)
   os.execute(cmd)
 
-  skeys=mxsamples:new()
+  local mxsamples_=include("mx.samples2/lib/mx.samples2") 
+  mxsamples=mxsamples_:new()
   update_uilist()
 
   setup_midi()
 
-  local f=io.open(_path.data.."mx.samples/last","rb")
+  local f=io.open(_path.data.."mx.samples2/last","rb")
   if f~=nil then
     local content=f:read("*all")
     f:close()
@@ -115,7 +115,7 @@ function init()
   params:set("mxsamples_delay_times",4)
 
   print("available instruments: ")
-  tab.print(skeys:list_instruments())
+  tab.print(mxsamples:list_instruments())
   clock.run(redraw_clock)
 end
 
@@ -150,9 +150,10 @@ function setup_midi()
           do return end
         end
         if d.type=="note_on" then
-          skeys:on({name=available_instruments[instrument_current].id,midi=data[2],velocity=data[3]})
+          --mxsamples:on({name=available_instruments[instrument_current].id,midi=data[2],velocity=data[3]})
+          mxsamples:on({name=_path.audio.."mx.samples/"..available_instruments[instrument_current].id,midi=d.note,velocity=d.vel})
         elseif d.type=="note_off" then
-          skeys:off({name=available_instruments[instrument_current].id,midi=data[2]})
+          mxsamples:off({name=_path.audio.."mx.samples/"..available_instruments[instrument_current].id,midi=d.note})
         elseif d.cc==64 then -- sustain pedal
           local val=d.val
           if val>126 then
@@ -161,9 +162,9 @@ function setup_midi()
             val=0
           end
           if params:get("mxsamples_pedal_mode")==1 then
-            engine.mxsamples_sustain(val)
+            --engine.mxsamples_sustain(val)
           else
-            engine.mxsamples_sustenuto(val)
+            --engine.mxsamples_sustenuto(val)
           end
         end
       end
@@ -194,10 +195,12 @@ function update_uilist()
   items={}
   for i,a in ipairs(available_instruments) do
     available_instruments[i].id=string.gsub(a.name," ","_")
-    local files_for=os.capture("ls /home/we/dust/audio/mx.samples/"..available_instruments[i].id.."/*.wav")
     local downloaded=false
-    if string.find(files_for,".wav") then
-      downloaded=true
+    if util.file_exists("/home/we/dust/audio/mx.samples/"..available_instruments[i].id) then 
+        local files_for=os.capture("ls /home/we/dust/audio/mx.samples/"..available_instruments[i].id.."/*.wav")
+        if string.find(files_for,".wav") then
+        downloaded=true
+        end
     end
     local s=a.name
     available_instruments[i].downloaded=downloaded
@@ -239,7 +242,7 @@ function key(k,z)
     local i=uilist.index
     if available_instruments[i].downloaded then
       instrument_current=i
-      f=io.open(_path.data.."mx.samples/last","w")
+      f=io.open(_path.data.."mx.samples2/last","w")
       f:write(instrument_current)
       f:close()
       update_uilist()
@@ -254,7 +257,7 @@ function key(k,z)
           download(available_instruments[download_available].id)
           instrument_current=download_available
           update_uilist()
-          skeys:add_folder(_path.audio.."mx.samples/"..available_instruments[download_available].id.."/")
+          mxsamples:list_instruments()
           download_available=0
           downloading=false
           redraw()
