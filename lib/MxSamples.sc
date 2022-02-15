@@ -76,4 +76,13 @@ MxSamples {
 		});
 	}
 
+	free {
+		ins.keysValuesDo({ arg note, val;
+			val.free;
+		});
+		synFx.free;
+		busDelay.free;
+		busReverb.free;
+	}
+
 }

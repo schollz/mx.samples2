@@ -358,4 +358,15 @@ MxSamplesInstrument {
 	}
 
 
+	free {
+		syn.keysValuesDo({arg note,v1;
+			syn.at(note).keysValuesDo({ arg k,v;
+				v.free;
+			});
+		});
+		buf.keysValuesDo({ arg name,b;
+			b.free;
+		});
+	}
+
 }
