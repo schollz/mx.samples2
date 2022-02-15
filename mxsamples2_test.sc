@@ -1,20 +1,30 @@
 (
 s.waitForBoot({
 	// ~mx=MxSamples(s,"/home/zns/Documents/mx.samples2/kalimba");
-	~mx=MxSamples(s,"/home/zns/Documents/mx.samples2/steinway_model_b",400);
+	// ~mx=MxSamplesInstrument(s,"/home/zns/Documents/mx.samples2/steinway_model_b",400);
+	// ~mx=MxSamplesInstrument(s,"C:\\Users\\zacks\\Downloads\\string_spurs",400);
+	~mx=MxSamplesInstrument(s,"C:\\Users\\zacks\\Downloads\\steinway_model_b",400);
 	~mx.garbageCollect;
 	"ready".postln;
 	// ~mx.play(58,1);
 	~mx.noteOn(62,60);
+	~mx.setParam("attack",0.1);
 
 });
 )
-	~mx.noteOn(62-24,60);
-	~mx.noteOn(62+4,60);
-	~mx.noteOn(62+7,120);
-	~mx.noteOn(62+7+24,30);
+~mx.syn.postln;
+~mx.noteOff(62,60);
+~mx.setParam("pan",0);
+~mx.noteOn(90,60);
+~mx.noteOff(90);
+~mx.params.postln;
 
-	~mx.noteOff(62,3);
+
+~mx.noteOn(62-24,40);
+~mx.noteOn(62+4,60);
+~mx.noteOn(62+7,40);
+~mx.noteOn(62+7+24,10);
+
 
 ~mx.buf.postln;
 ~mx.play(70,120);
