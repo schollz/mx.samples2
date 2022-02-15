@@ -8,6 +8,7 @@ MxSamples {
 	var synFx;
 	var busDelay;
 	var busReverb;
+	var garbageCollector;
 
 	*new {
 		arg serverName,numberMaxSamples;
@@ -53,7 +54,7 @@ MxSamples {
 		synFx = Synth.tail(server,"mxfx",[\out,0,\inDelay,busDelay,\inReverb,busReverb]);
 
 		// unload old buffers periodically
-		Routine {
+		garbageCollector=Routine {
 			loop {
 				var diskMB=0.0;
 				ins.keysValuesDo({arg k1, val;
@@ -62,7 +63,7 @@ MxSamples {
 					});
 				});
 				// ("current mb usage: "++diskMB).postln;
-				if (diskMB>300.0,{
+				if (diskMB>400.0,{
 					ins.keysValuesDo({arg k, val;
 						val.garbageCollect;
 					});	
@@ -96,12 +97,14 @@ MxSamples {
 	}
 
 	free {
+		garbageCollector.stop;
 		ins.keysValuesDo({ arg note, val;
 			val.free;
 		});
 		synFx.free;
 		busDelay.free;
 		busReverb.free;
+		ins.free;
 	}
 
 }

@@ -71,15 +71,17 @@ MxSamplesInstrument {
 					dyns=fileSplit[2].asInteger;
 					rr=fileSplit[3].asInteger;
 					rel=fileSplit[4].asInteger;
-					if (noteDynamics.at(note).isNil,{
-						noteDynamics.put(note,dyns);
-						noteNumbers.add(note);
-					});
-					if (noteRoundRobins.at(note.asString++"."++dyn.asString).isNil,{
-						noteRoundRobins.put(note.asString++"."++dyn.asString,rr);
-					},{
-						if (rr>noteRoundRobins.at(note.asString++"."++dyn.asString),{
+					if (rel==0,{
+						if (noteDynamics.at(note).isNil,{
+							noteDynamics.put(note,dyns);
+							noteNumbers.add(note);
+						});
+						if (noteRoundRobins.at(note.asString++"."++dyn.asString).isNil,{
 							noteRoundRobins.put(note.asString++"."++dyn.asString,rr);
+						},{
+							if (rr>noteRoundRobins.at(note.asString++"."++dyn.asString),{
+								noteRoundRobins.put(note.asString++"."++dyn.asString,rr);
+							});
 						});
 					});
 				});
@@ -106,6 +108,7 @@ MxSamplesInstrument {
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
 			DetectSilence.ar(snd,0.00001,doneAction:2);
 			snd=Balance2.ar(snd[0],snd[1],pan,amp);
+			snd=snd/4; // assume ~ 4 note polyphony so reduce max volume
 			Out.ar(out,snd);
 			Out.ar(busReverb,snd*sendReverb);
 			Out.ar(busDelay,snd*sendDelay);
@@ -128,6 +131,7 @@ MxSamplesInstrument {
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
 			DetectSilence.ar(snd,0.00001,doneAction:2);
 			snd=Pan2.ar(snd,pan,amp);
+			snd=snd/4; // assume ~ 4 note polyphony so reduce max volume
 			Out.ar(out,snd);
 			Out.ar(busReverb,snd*sendReverb);
 			Out.ar(busDelay,snd*sendDelay);
@@ -169,7 +173,7 @@ MxSamplesInstrument {
 		var buf1mix=1.0;
 		var amp=1.0;
 		var file1,file2,fileLoaded;
-		var velIndex;
+		var velIndex=0;
 		var velIndices;
 		var vels;
 		var dyns;
@@ -199,12 +203,14 @@ MxSamplesInstrument {
 
 		// determine the number of dynamics
 		dyns=noteDynamics.at(noteClosest);
-		velIndices=Array.fill(dyns,{ arg i;
-			i*128/(dyns-1)
+		if (dyns>1,{
+			velIndices=Array.fill(dyns,{ arg i;
+				i*128/(dyns-1)
+			});
+			velIndex=velIndices.indexOfGreaterThan(velocity)-1;
 		});
-		velIndex=velIndices.indexOfGreaterThan(velocity)-1;
 
-		// determine the closest loaded note, in case file is not available
+		// determine the closest loaded note, in case both files are not available
 		noteClosestLoaded=notNumbersLoaded[notNumbersLoaded.indexIn(note+((velIndex+1)/10))];
 		if (noteClosestLoaded.notNil,{
 			fileLoaded=noteNumbersLoadedDict[noteClosestLoaded];
@@ -225,7 +231,7 @@ MxSamplesInstrument {
 		// determine file 1 and 2 interpolation
 		file1=noteClosest.asInteger.asString++".";
 		file2=noteClosest.asInteger.asString++".";
-		if (noteDynamics[noteClosest]<2,{
+		if (dyns<2,{
 			// simple playback using amp
 			amp=velocity/127.0;
 			file1=file1++"1.1.";
@@ -234,6 +240,7 @@ MxSamplesInstrument {
 			file1=file1++(noteRoundRobins.at(noteClosest.asString++".1").rand+1).asString++".0.wav";
 			file2=file2++(noteRoundRobins.at(noteClosest.asString++".1").rand+1).asString++".0.wav";
 		},{
+			var rr1,rr2;
 			// gather the velocity indices that are available
 			// TODO: make this specific to a single note?
 			vels=[velIndices[velIndex],velIndices[velIndex+1]];
@@ -245,8 +252,16 @@ MxSamplesInstrument {
 			file1=file1++dyns.asString++".";
 			file2=file2++dyns.asString++".";
 			// add round robin
-			file1=file1++(noteRoundRobins.at(noteClosest.asString++"."++(velIndex+1).asString).rand+1).asString++".0.wav";
-			file2=file2++(noteRoundRobins.at(noteClosest.asString++"."++(velIndex+2).asString).rand+1).asString++".0.wav";
+			rr1=noteRoundRobins.at(noteClosest.asString++"."++(velIndex+1).asString);
+			if (rr1.isNil,{
+				rr1=1;
+			});
+			file1=file1++(rr1.rand+1).asString++".0.wav";
+			rr2=noteRoundRobins.at(noteClosest.asString++"."++(velIndex+2).asString);
+			if (rr2.isNil,{
+				rr2=1;
+			});
+			file2=file2++(rr2.rand+1).asString++".0.wav";			
 		});
 
 
@@ -254,7 +269,7 @@ MxSamplesInstrument {
 		if (buf.at(file1).isNil,{
 			if (buf.at(file2).isNil,{
 				// no file1 and no file2
-				if (noteClosestLoaded.notNil,{
+				if (fileLoaded.notNil,{
 					"playing without 1+2".postln;
 					this.doPlay(noteOriginal,amp,fileLoaded,fileLoaded,buf1mix,rateLoaded);
 				});
@@ -266,7 +281,9 @@ MxSamplesInstrument {
 			},{
 				// only have buf2
 				"playing without 1".postln;
-				this.doPlay(noteOriginal,amp,file2,file2,buf1mix,rate);
+				if (file2.notNil,{
+					this.doPlay(noteOriginal,amp,file2,file2,buf1mix,rate);
+				});
 			});
 			Buffer.read(server,PathName(folder+/+file1).fullPath,action:{ arg b1;
 				b1.postln;
@@ -385,7 +402,7 @@ MxSamplesInstrument {
 		arg note,amp,file1,file2,buf1mix,rate;
 		var notename=1000000.rand;
 		var node;
-		//[notename,note,amp,file1,file2,buf1mix,rate].postln;
+		[notename,note,amp,file1,file2,buf1mix,rate].postln;
 		// check if sound is loaded and unload it
 		if (syn.at(note).isNil,{
 			syn.put(note,Dictionary.new());
