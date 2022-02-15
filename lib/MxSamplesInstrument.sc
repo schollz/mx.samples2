@@ -17,6 +17,12 @@ MxSamplesInstrument {
 	var <busDelay;
 	var <busReverb;
 
+	var pedalSustainOn;
+	var pedalSostenutoOn;
+	var pedalSustainNotes;
+	var pedalSostenutoNotes;
+	var voicesOn;
+
 	*new {
 		arg serverName,folderToSamples,numberMaxSamples,busDelayArg,busReverbArg;
 		^super.new.init(serverName,folderToSamples,numberMaxSamples,busDelayArg,busReverbArg);
@@ -31,6 +37,11 @@ MxSamplesInstrument {
 		busDelay=busDelayArg;
 		busReverb=busReverbArg;
 
+		pedalSustainOn=false;
+		pedalSostenutoOn=false;
+		voicesOn=Dictionary.new();
+		pedalSustainNotes=Dictionary.new();
+		pedalSostenutoNotes=Dictionary.new();
 		buf=Dictionary.new();
 		syn=Dictionary.new();
 		noteDynamics=Dictionary.new();
@@ -238,17 +249,65 @@ MxSamplesInstrument {
 
 	}
 
-	noteOff {
-		arg note;
-		if (syn.at(note).notNil,{
-			syn.at(note).keysValuesDo({ arg k,v;
-				if (v.isRunning,{
-					v.set(\gate,0);
-				},{
-					syn.at(note).set(k,nil);
-				})
+	sustain {
+		arg on;
+		if (on==0,{
+			// release all sustained notes
+			pedalSustainNotes.keysValuesDo({ arg note, val;
+				if (voicesOn.at(note)==nil,{
+					pedalSustainNotes.removeAt(note);
+					noteOff(note);
+				});
+			});
+		}, {
+			// add currently down notes to the pedal
+			voicesOn.keysValuesDo({ arg note, val;
+				pedalSustainNotes.put(note,1);
 			});
 		});
+	}
+
+
+	sostenuto {
+		arg on;
+		if (pedalSostenutoOn==false,{
+			// release all sustained notes
+			pedalSostenutoNotes.keysValuesDo({ arg note, val;
+				if (voicesOn.at(note)==nil,{
+					pedalSostenutoNotes.removeAt(note);
+					noteOff(note);
+				});
+			});
+		},{
+			// add currently held notes
+			voicesOn.keysValuesDo({ arg note, val;
+				pedalSostenutoNotes.put(note,1);
+			});
+		});
+	}
+
+	noteOff {
+		arg note;
+		voicesOn.removeAt(note);
+		if (pedalSustainOn==true,{
+			pedalSustainNotes.put(note,1);
+		},{
+			if ((pedalSostenutoOn==true)&&(pedalSostenutoNotes.at(note)!=nil),{
+				// do nothing, it is a sostenuto note
+			},{
+				// remove the sound
+				if (syn.at(note).notNil,{
+					syn.at(note).keysValuesDo({ arg k,v;
+						if (v.isRunning,{
+							v.set(\gate,0);
+						},{
+							syn.at(note).set(k,nil);
+						})
+					});
+				});
+			});
+		});
+
 	}
 
 	noteFade {
@@ -294,6 +353,7 @@ MxSamplesInstrument {
 			"freeing "++notename;
 			syn.at(note).put(notename,nil);
 		}));
+		voicesOn.put(note,1);
 		NodeWatcher.register(syn.at(note).at(notename));
 	}
 
