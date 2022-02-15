@@ -51,6 +51,25 @@ MxSamples {
 		busReverb = Bus.audio(server,2);
 		server.sync;
 		synFx = Synth.tail(server,"mxfx",[\out,0,\inDelay,busDelay,\inReverb,busReverb]);
+
+		// unload old buffers periodically
+		Routine {
+			loop {
+				var diskMB=0.0;
+				ins.keysValuesDo({arg k1, val;
+					val.buf.keysValuesDo({arg k,v;
+						diskMB=diskMB+(v.numFrames*v.numChannels*4.0/1000000.0);
+					});
+				});
+				// ("current mb usage: "++diskMB).postln;
+				if (diskMB>300.0,{
+					ins.keysValuesDo({arg k, val;
+						val.garbageCollect;
+					});	
+				});
+				3.wait;
+			}
+		}.play;
 	}
 
 	setParam {
