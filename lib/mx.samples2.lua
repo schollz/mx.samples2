@@ -30,11 +30,12 @@ function MxSamples:new(args)
   -- add parameters
   params:add_group("MX.SAMPLES",19)
   local filter_freq=controlspec.new(20,20000,'exp',0,20000,'Hz')
+  -- params:add_option("mxsamples_instrument","instrument",l.instruments)
   params:add {
     type='control',
     id="mxsamples_amp",
     name="amp",
-  controlspec=controlspec.new(0,10,'lin',0,1.0,'amp')}
+  controlspec=controlspec.new(0,10,'lin',0.01,1.0,'amp',0.01/10)}
   params:add {
     type='control',
     id="mxsamples_pan",
@@ -44,7 +45,7 @@ function MxSamples:new(args)
     type='control',
     id="mxsamples_attack",
     name="attack",
-  controlspec=controlspec.new(0,10,'lin',0,0,'s')}
+  controlspec=controlspec.new(0,10,'lin',0.01,0.01,'s',0.01/10)}
   params:add {
     type='control',
     id="mxsamples_decay",
@@ -106,13 +107,13 @@ function MxSamples:new(args)
   controlspec=controlspec.new(0,100,'lin',0,1,'beats',1/100)}
   params:set_action("mxsamples_delay_times",function(x)
     if engine.name=="MxSamples" then
-    --   engine.mxsamples_delay_feedback(x/100)
+      --   engine.mxsamples_delay_feedback(x/100)
     end
   end)
   params:add_option("mxsamples_delay_rate","delay rate",delay_rates_names,1)
   params:set_action("mxsamples_delay_rate",function(x)
     if engine.name=="MxSamples" then
-    --   engine.mxsamples_delay_beats(delay_rates[x])
+      --   engine.mxsamples_delay_beats(delay_rates[x])
     end
   end)
   params:add {
@@ -128,53 +129,69 @@ function MxSamples:new(args)
   params:add_option("mxsamples_scale_velocity","velocity sensitivity",{"delicate","normal","stiff","fixed"},2)
   params:add_option("mxsamples_pedal_mode","pedal mode",{"sustain","sostenuto"},1)
 
+  params:default()
+
   return l
 end
 
 function MxSamples:on(mx)
-    if mx.name==nil then
-        print("MxSamples:on error: no name")
-        do return end 
-    end
-    if not util.file_exists(mx.name) then
-        print("MxSamples:on error: name is not folder")
-        do return end
-    end
-    if mx.midi==nil then
-        print("MxSamples:on error: no midi")
-        do return end 
-    end
-    mx.velocity=mx.velocity or 60
-    
-    -- scale velocity depending on sensitivity
-    if params:get("mxsamples_scale_velocity")<4 then
-        mx.velocity=velocities[params:get("mxsamples_scale_velocity")][math.floor(mx.velocity+1)]
-    end
+  if mx.name==nil then
+    print("MxSamples:on error: no name")
+    do return end
+  end
+  if not util.file_exists(mx.name) then
+    print("MxSamples:on error: name is not folder")
+    do return end
+  end
+  if mx.midi==nil then
+    print("MxSamples:on error: no midi")
+    do return end
+  end
+  mx.velocity=mx.velocity or 60
 
-    if mx.on==nil then
-        mx.on=true
-    end
-    if mx.on then 
-        engine.mx_note_on(mx.name,mx.midi,mx.velocity)
-    else
-        engine.mx_note_off(mx.name,mx.midi)
-    end
+  -- scale velocity depending on sensitivity
+  if params:get("mxsamples_scale_velocity")<4 then
+    mx.velocity=velocities[params:get("mxsamples_scale_velocity")][math.floor(mx.velocity+1)]
+  end
+
+  if mx.on==nil then
+    mx.on=true
+  end
+
+  mx.amp=mx.amp or params:get("mxsamples_amp")
+  mx.pan=mx.pan or params:get("mxsamples_pan")
+  mx.attack=mx.attack or params:get("mxsamples_attack")
+  mx.decay=mx.decay or params:get("mxsamples_decay")
+  mx.sustain=mx.sustain or params:get("mxsamples_sustain")
+  mx.release=mx.release or params:get("mxsamples_release")
+  -- mx.decay=mx.lpf or params:get("mxsamples_lpf_mxsamples"),
+  -- mx.decay=mx.hpf or params:get("mxsamples_hpf_mxsamples"),
+  mx.delay_send=mx.delay_send or params:get("mxsamples_delay_send")/100
+  mx.reverb_send=mx.reverb_send or params:get("mxsamples_reverb_send")/100
+
+  if mx.on then
+    engine.mx_note_onfx(mx.name,mx.midi,mx.velocity,
+      mx.amp,mx.pan,mx.attack,mx.decay,mx.sustain,mx.release,
+    mx.delay_send,mx.reverb_send)
+  else
+    engine.mx_note_off(mx.name,mx.midi)
+  end
 end
 
 function MxSamples:off(mx)
-    mx.on=false 
-    mx.velocity=0
-    self:on(mx)
+  mx.on=false
+  mx.velocity=0
+  self:on(mx)
 end
 
 function MxSamples:list_instruments()
-    self.instruments={}
-    for _, name in ipairs(util.scandir(_path.audio.."mx.samples")) do 
-      if name:sub(-1,-1)=="/" then
-          table.insert(self.instruments,name:sub(1,-2))
-      end
+  self.instruments={}
+  for _,name in ipairs(util.scandir(_path.audio.."mx.samples")) do
+    if name:sub(-1,-1)=="/" then
+      table.insert(self.instruments,name:sub(1,-2))
     end
-    return self.instruments
+  end
+  return self.instruments
 end
 
 return MxSamples

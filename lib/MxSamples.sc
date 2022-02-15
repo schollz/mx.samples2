@@ -89,6 +89,18 @@ MxSamples {
 		ins.at(folder).noteOn(note,velocity);
 	}
 
+
+	noteOnFX {
+		arg folder,note,velocity,
+		amp,pan,
+		attack,decay,sustain,release,
+		delaysend,reverbsend;
+		if (ins.at(folder).isNil,{
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busDelay.index,busReverb.index));
+		});
+		ins.at(folder).noteOnFX(note,velocity,amp,pan,attack,decay,sustain,release,delaysend,reverbsend);
+	}
+
 	noteOff {
 		arg folder,note;
 		if (ins.at(folder).notNil,{

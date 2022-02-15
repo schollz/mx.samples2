@@ -162,6 +162,22 @@ MxSamplesInstrument {
 		params.put(key,value);
 	}
 
+	noteOnFX {
+		arg note,velocity,
+		amp,pan,
+		attack,decay,sustain,release,
+		delaysend,reverbsend;
+		params.put("amp",amp);
+		params.put("pan",pan);
+		params.put("attack",attack);
+		params.put("decay",decay);
+		params.put("sustain",sustain);
+		params.put("release",release);
+		params.put("delaysend",delaysend);
+		params.put("reverbsend",reverbsend);
+		this.noteOn(note,velocity);
+	}
+
 	noteOn {
 		arg note,velocity;
 		var noteOriginal=note;
@@ -367,7 +383,7 @@ MxSamplesInstrument {
 							if (v.isRunning,{
 								if (v.isPlaying,{
 									syn.at(note).removeAt(k);
-									v.set(\gate,0,\release,params.at("fadetime"));
+									v.set(\gate,0);
 								});
 							});
 						});
