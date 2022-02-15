@@ -17,6 +17,13 @@ MxSamples {
 		ins=Dictionary.new();
 	}
 
+	setParam {
+		arg folder,key,value;
+		if (ins.at(folder).isNil,{
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples));
+		});
+		ins.at(folder).setParam(key,value);
+	}
 
 	noteOn {
 		arg folder,note,velocity;
@@ -24,7 +31,6 @@ MxSamples {
 			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples));
 		});
 		ins.at(folder).noteOn(note,velocity);
-
 	}
 
 	noteOff {

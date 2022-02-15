@@ -12,6 +12,7 @@ s.waitForBoot({
 
 });
 )
+
 ~mx.syn.postln;
 ~mx.noteOff(62,60);
 ~mx.setParam("pan",0);
@@ -19,18 +20,39 @@ s.waitForBoot({
 ~mx.noteOff(90);
 ~mx.params.postln;
 
-
 ~mx.noteOn(62-24,40);
 ~mx.noteOn(62+4,60);
 ~mx.noteOn(62+7,40);
 ~mx.noteOn(62+7+24,10);
 
 
-~mx.buf.postln;
-~mx.play(70,120);
+// encapsulated
 
-~mx.play(21,70);
-~mx.play(78,1);
+(
+s.waitForBoot({
+	// ~mx=MxSamples(s,"/home/zns/Documents/mx.samples2/kalimba");
+	// ~mx=MxSamplesInstrument(s,"/home/zns/Documents/mx.samples2/steinway_model_b",400);
+	// ~mx=MxSamplesInstrument(s,"C:\\Users\\zacks\\Downloads\\string_spurs",400);
+	~mx=MxSamples(s,400);
+	// ~mx.play(58,1);
+	~mx.noteOn("C:\\Users\\zacks\\Downloads\\steinway_model_b",62,60);
+
+});
+)
+
+~mx.noteOn("C:\\Users\\zacks\\Downloads\\steinway_model_b",62,60);
+~mx.setParam("C:\\Users\\zacks\\Downloads\\string_spurs","attack",10);
+~mx.noteOn("C:\\Users\\zacks\\Downloads\\string_spurs",62,60);
+
+~mx.noteOff("C:\\Users\\zacks\\Downloads\\steinway_model_b",62);
+~mx.noteOff("C:\\Users\\zacks\\Downloads\\string_spurs",62);
+
+~mx.setParam("C:\\Users\\zacks\\Downloads\\steinway_model_b","pan",0);
+
+
+
+
+////// PLAYGROUND
 
 ~mx.buf.size
 a=Dictionary.new();
