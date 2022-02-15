@@ -14,18 +14,22 @@ MxSamplesInstrument {
 	var <syn;
 	var <params;
 
+	var <busDelay;
+	var <busReverb;
 
 	*new {
-		arg serverName,folderToSamples,numberMaxSamples;
-		^super.new.init(serverName,folderToSamples,numberMaxSamples);
+		arg serverName,folderToSamples,numberMaxSamples,busDelayArg,busReverbArg;
+		^super.new.init(serverName,folderToSamples,numberMaxSamples,busDelayArg,busReverbArg);
 	}
 
 	init {
-		arg serverName,folderToSamples,numberMaxSamples;
+		arg serverName,folderToSamples,numberMaxSamples,busDelayArg,busReverbArg;
 
 		server=serverName;
 		folder=folderToSamples;
 		maxSamples=numberMaxSamples;
+		busDelay=busDelayArg;
+		busReverb=busReverbArg;
 
 		buf=Dictionary.new();
 		syn=Dictionary.new();
@@ -40,6 +44,8 @@ MxSamplesInstrument {
 			"sustain", 1.0,
 			"release", 1.0,
 			"fadetime",1.0,
+			"delaysend",0.1,
+			"reverbsend",0.1,
 		]);
 
 
@@ -268,7 +274,7 @@ MxSamplesInstrument {
 			syn.put(note,Dictionary.new());
 		});
 		this.noteFade(note);
-		syn.at(note).put(notename,Synth("playx"++buf.at(file1).numChannels,[
+		syn.at(note).put(notename,Synth.head(server,"playx"++buf.at(file1).numChannels,[
 			\out,0,
 			\amp,params.at("amp"),
 			\pan,params.at("pan"),
@@ -280,6 +286,10 @@ MxSamplesInstrument {
 			\buf2,buf.at(file2),
 			\buf1mix,buf1mix,
 			\rate,rate,
+			\busDelay,busDelay,
+			\sendDelay,params.at("delaysend"),
+			\busReverb,busReverb,
+			\sendReverb,params.at("reverbsend"),
 		]).onFree({
 			"freeing "++notename;
 			syn.at(note).put(notename,nil);

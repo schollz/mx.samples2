@@ -40,6 +40,14 @@ s.waitForBoot({
 });
 )
 
+
+~mx.setParam("C:\\Users\\zacks\\Downloads\\steinway_model_b","reverbsend",1);
+~mx.noteOn("C:\\Users\\zacks\\Downloads\\steinway_model_b",62,60);
+
+~mx.ins.at("C:\\Users\\zacks\\Downloads\\steinway_model_b").params.postln;
+
+~mx.ins.at("C:\\Users\\zacks\\Downloads\\steinway_model_b").busDelay
+
 ~mx.noteOn("C:\\Users\\zacks\\Downloads\\steinway_model_b",62,60);
 ~mx.setParam("C:\\Users\\zacks\\Downloads\\string_spurs","attack",10);
 ~mx.noteOn("C:\\Users\\zacks\\Downloads\\string_spurs",62,60);
