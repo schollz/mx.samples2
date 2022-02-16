@@ -11,6 +11,7 @@ MxSamplesInstrument {
 
 	var <buf;
 	var bufOrdered;
+	var bufUsed;
 	var <syn;
 	var synOutput;
 	var <params;
@@ -43,6 +44,7 @@ MxSamplesInstrument {
 		pedalSustainOn=false;
 		pedalSostenutoOn=false;
 		voicesOn=Dictionary.new();
+		bufUsed=Dictionary.new();
 		pedalSustainNotes=Dictionary.new();
 		pedalSostenutoNotes=Dictionary.new();
 		buf=Dictionary.new();
@@ -156,14 +158,24 @@ MxSamplesInstrument {
 	garbageCollect {
 		var times=(buf.size*0.1);
 		var foo=bufOrdered;
+		var ct=SystemClock.seconds;
 		times.postln;
 		if (buf.size>10,{
 			foo.do({arg k,i;
 				if (i<times,{
-					buf.at(k).free;
-					buf.removeAt(k);
-					bufOrdered.removeAt(i);
-					("unloaded buffer file "++k).postln;
+					var bnum=buf.at(k).bufnum;
+					var doRemove=true;
+					if (bufUsed.at(bnum).notNil,{
+						if (ct-bufUsed.at(bnum)<30,{
+							doRemove=false;
+						});
+					});
+					if (doRemove==true,{
+						buf.at(k).free;
+						buf.removeAt(k);
+						bufOrdered.removeAt(i);
+						("unloaded buffer file "++k).postln;
+					});
 				});
 			});
 		});
@@ -455,6 +467,8 @@ MxSamplesInstrument {
 			syn.put(note,Dictionary.new());
 		});
 		this.noteFade(note);
+		bufUsed.put(buf.at(file1).bufnum,SystemClock.seconds);
+		bufUsed.put(buf.at(file2).bufnum,SystemClock.seconds);
 		node=Synth.head(server,"playx"++buf.at(file1).numChannels,[
 			\out,busOutput,
 			\amp,amp*params.at("amp"),
@@ -487,6 +501,7 @@ MxSamplesInstrument {
 		});
 		synOutput.free;
 		busOutput.free;
+		bufUsed.free;
 	}
 
 }
