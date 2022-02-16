@@ -62,13 +62,15 @@ MxSamples {
 						diskMB=diskMB+(v.numFrames*v.numChannels*4.0/1000000.0);
 					});
 				});
-				// ("current mb usage: "++diskMB).postln;
-				if (diskMB>400.0,{
+				if (diskMB>100.0,{
+					("current mb usage: "++diskMB).postln;
 					ins.keysValuesDo({arg k, val;
 						val.garbageCollect;
 					});	
+					1.wait;
+				},{
+					3.wait;
 				});
-				3.wait;
 			}
 		}.play;
 	}

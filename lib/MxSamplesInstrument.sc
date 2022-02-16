@@ -10,7 +10,6 @@ MxSamplesInstrument {
 	var <noteRoundRobins;
 
 	var <buf;
-	var bufOrdered;
 	var bufUsed;
 	var <syn;
 	var synOutput;
@@ -48,7 +47,6 @@ MxSamplesInstrument {
 		pedalSustainNotes=Dictionary.new();
 		pedalSostenutoNotes=Dictionary.new();
 		buf=Dictionary.new();
-		bufOrdered=Array.new(200);
 		syn=Dictionary.new();
 		noteDynamics=Dictionary.new();
 		noteRoundRobins=Dictionary.new();
@@ -156,29 +154,37 @@ MxSamplesInstrument {
 
 
 	garbageCollect {
-		var times=(buf.size*0.1);
-		var foo=bufOrdered;
 		var ct=SystemClock.seconds;
-		times.postln;
-		if (buf.size>10,{
-			foo.do({arg k,i;
-				if (i<times,{
-					var bnum=buf.at(k).bufnum;
-					var doRemove=true;
-					if (bufUsed.at(bnum).notNil,{
-						if (ct-bufUsed.at(bnum)<30,{
-							doRemove=false;
+		var bufUsedOrdered=Dictionary();
+		var deleted=0;
+		var files;
+		bufUsed.keysValuesDo({ arg k,v;
+			bufUsedOrdered[v]=k;
+		});
+		files=bufUsedOrdered.atAll(bufUsedOrdered.order);
+		if (files.notNil,{
+			files.reverse.do({arg k,i;
+				if (deleted<10,{
+					if (buf.at(k).notNil,{
+						var bnum=buf.at(k).bufnum;
+						var doRemove=false;
+						if (bufUsed.at(k).notNil,{
+							if (ct-bufUsed.at(k)>20,{
+								doRemove=true;
+							});
 						});
-					});
-					if (doRemove==true,{
-						buf.at(k).free;
-						buf.removeAt(k);
-						bufOrdered.removeAt(i);
-						("unloaded buffer file "++k).postln;
+						if (doRemove==true,{
+							buf.at(k).free;
+							buf.removeAt(k);
+							bufUsed.removeAt(k);
+							deleted=deleted+1;
+							("unloaded buffer file "++k).postln;
+						});
 					});
 				});
 			});
 		});
+
 	}
 
 	setParam {
@@ -335,7 +341,7 @@ MxSamplesInstrument {
 				Buffer.read(server,PathName(folder+/+file2).fullPath,action:{ arg b1;
 					b1.postln;
 					buf.put(file2,b1);
-					bufOrdered.add(file2);
+					bufUsed.put(file2,SystemClock.seconds);
 				});
 			},{
 				// only have buf2
@@ -347,7 +353,7 @@ MxSamplesInstrument {
 			Buffer.read(server,PathName(folder+/+file1).fullPath,action:{ arg b1;
 				b1.postln;
 				buf.put(file1,b1);
-				bufOrdered.add(file1);
+				bufUsed.put(file1,SystemClock.seconds);
 			});
 		},{
 			if (buf.at(file2).isNil,{
@@ -357,7 +363,7 @@ MxSamplesInstrument {
 				Buffer.read(server,PathName(folder+/+file2).fullPath,action:{ arg b1;
 					b1.postln;
 					buf.put(file2,b1);
-					bufOrdered.add(file2);
+					bufUsed.put(file2,SystemClock.seconds);
 				});
 			},{
 				// play original files!
@@ -467,8 +473,8 @@ MxSamplesInstrument {
 			syn.put(note,Dictionary.new());
 		});
 		this.noteFade(note);
-		bufUsed.put(buf.at(file1).bufnum,SystemClock.seconds);
-		bufUsed.put(buf.at(file2).bufnum,SystemClock.seconds);
+		bufUsed.put(file1,SystemClock.seconds);
+		bufUsed.put(file2,SystemClock.seconds);
 		node=Synth.head(server,"playx"++buf.at(file1).numChannels,[
 			\out,busOutput,
 			\amp,amp*params.at("amp"),
