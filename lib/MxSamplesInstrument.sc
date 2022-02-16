@@ -58,7 +58,7 @@ MxSamplesInstrument {
 			"decay", 0.1,
 			"sustain", 1.0,
 			"release", 1.0,
-			"fadetime",1.0,
+			"fadetime",0.1,
 			"delaysend",0.0,
 			"reverbsend",0.0,
 			"lpf",18000.0,
@@ -112,7 +112,7 @@ MxSamplesInstrument {
 			snd2=PlayBuf.ar(2,buf2,rate,t_trig,startPos:startPos*frames2,doneAction:Select.kr(frames2>frames1,[0,2]));
 			snd=SelectX.ar(buf1mix,[snd2,snd]);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
-			DetectSilence.ar(snd,0.00001,doneAction:2);
+			DetectSilence.ar(snd,0.0005,doneAction:2);
 			snd=Balance2.ar(snd[0],snd[1],pan,amp);
 			snd=snd/4; // assume ~ 4 note polyphony so reduce max volume
 			Out.ar(out,snd);
@@ -132,7 +132,7 @@ MxSamplesInstrument {
 			snd2=PlayBuf.ar(1,buf2,rate,t_trig,startPos:startPos*frames2,doneAction:Select.kr(frames2>frames1,[0,2]));
 			snd=SelectX.ar(buf1mix,[snd2,snd]);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
-			DetectSilence.ar(snd,0.00001,doneAction:2);
+			DetectSilence.ar(snd,0.0005,doneAction:2);
 			snd=Pan2.ar(snd,pan,amp);
 			snd=snd/4; // assume ~ 4 note polyphony so reduce max volume
 			Out.ar(out,snd);
@@ -306,6 +306,7 @@ MxSamplesInstrument {
 			file2=file2++(noteRoundRobins.at(noteClosest.asString++".1").rand+1).asString++".0.wav";
 		},{
 			var rr1,rr2;
+			amp=velocity/127.0/2+0.25;
 			// gather the velocity indices that are available
 			// TODO: make this specific to a single note?
 			vels=[velIndices[velIndex],velIndices[velIndex+1]];
