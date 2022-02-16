@@ -12,10 +12,12 @@ MxSamplesInstrument {
 	var <buf;
 	var bufOrdered;
 	var <syn;
+	var synOutput;
 	var <params;
 
 	var <busDelay;
 	var <busReverb;
+	var busOutput;
 
 	var pedalSustainOn;
 	var pedalSostenutoOn;
@@ -36,6 +38,7 @@ MxSamplesInstrument {
 		maxSamples=numberMaxSamples;
 		busDelay=busDelayArg;
 		busReverb=busReverbArg;
+		busOutput=Bus.audio(server,2);
 
 		pedalSustainOn=false;
 		pedalSostenutoOn=false;
@@ -58,6 +61,10 @@ MxSamplesInstrument {
 			"fadetime",1.0,
 			"delaysend",0.0,
 			"reverbsend",0.0,
+			"lpf",18000.0,
+			"lpfrq",1.0,
+			"hpf",60.0,
+			"hpfrq",1.0,
 		]);
 
 
@@ -96,8 +103,7 @@ MxSamplesInstrument {
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
 			attack=0.01,decay=0.1,sustain=1.0,release=1,gate=1,
-			startPos=0,lpf=18000,
-			busReverb,busDelay,sendReverb=0,sendDelay=0;
+			startPos=0;
 			var snd,snd2;
 			var frames1=BufFrames.ir(buf1);
 			var frames2=BufFrames.ir(buf2);
@@ -110,8 +116,6 @@ MxSamplesInstrument {
 			snd=Balance2.ar(snd[0],snd[1],pan,amp);
 			snd=snd/4; // assume ~ 4 note polyphony so reduce max volume
 			Out.ar(out,snd);
-			Out.ar(busReverb,snd*sendReverb);
-			Out.ar(busDelay,snd*sendDelay);
 		}).send(server);
 
 		SynthDef("playx1",{
@@ -119,8 +123,7 @@ MxSamplesInstrument {
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
 			attack=0.01,decay=0.1,sustain=1.0,release=1,gate=1,
-			startPos=0,lpf=18000,
-			busReverb,busDelay,sendReverb=0,sendDelay=0;
+			startPos=0;
 			var snd,snd2;
 			var frames1=BufFrames.ir(buf1);
 			var frames2=BufFrames.ir(buf2);
@@ -133,10 +136,19 @@ MxSamplesInstrument {
 			snd=Pan2.ar(snd,pan,amp);
 			snd=snd/4; // assume ~ 4 note polyphony so reduce max volume
 			Out.ar(out,snd);
-			Out.ar(busReverb,snd*sendReverb);
-			Out.ar(busDelay,snd*sendDelay);
 		}).send(server);
 
+		synOutput = {
+			arg out=0,in,
+			lpf=18000,lpfrq=1.0,hpf=60,hpfrq=1.0,
+			busReverb,busDelay,sendReverb=0,sendDelay=0;
+			var snd=In.ar(in,2);
+			snd = RLPF.ar(snd,lpf,lpfrq);
+			snd = RHPF.ar(snd,hpf,hpfrq);
+			Out.ar(out,snd);
+			Out.ar(busReverb,snd*sendReverb);
+			Out.ar(busDelay,snd*sendDelay);
+		}.play(target:server, args:[\in, busOutput.index,\busReverb,busReverb,\busDelay,busDelay],addAction:\addToHead);
 
 	}
 
@@ -160,13 +172,16 @@ MxSamplesInstrument {
 	setParam {
 		arg key,value;
 		params.put(key,value);
+		// TODO: check if the parameter is one to set
+		this.updateOutput;
 	}
 
 	noteOnFX {
 		arg note,velocity,
 		amp,pan,
 		attack,decay,sustain,release,
-		delaysend,reverbsend;
+		delaysend,reverbsend,
+		lpf,lpfrq,hpf,hpfrq;
 		params.put("amp",amp);
 		params.put("pan",pan);
 		params.put("attack",attack);
@@ -175,7 +190,23 @@ MxSamplesInstrument {
 		params.put("release",release);
 		params.put("delaysend",delaysend);
 		params.put("reverbsend",reverbsend);
+		params.put("lpf",lpf);
+		params.put("lpfrq",lpfrq);
+		params.put("hpf",hpf);
+		params.put("hpfrq",hpfrq);
+		this.updateOutput;
 		this.noteOn(note,velocity);
+	}
+
+	updateOutput {
+		synOutput.set(
+			\sendReverb,params.at("reverbsend"),
+			\sendDelay,params.at("delaysend"),
+			\hpf,params.at("hpf"),
+			\hpfrq,params.at("hpfrq"),
+			\lpf,params.at("lpf"),
+			\lpfrq,params.at("lpfrq"),
+		);
 	}
 
 	noteOn {
@@ -425,7 +456,7 @@ MxSamplesInstrument {
 		});
 		this.noteFade(note);
 		node=Synth.head(server,"playx"++buf.at(file1).numChannels,[
-			\out,0,
+			\out,busOutput,
 			\amp,amp*params.at("amp"),
 			\pan,params.at("pan"),
 			\attack,params.at("attack"),
@@ -436,10 +467,6 @@ MxSamplesInstrument {
 			\buf2,buf.at(file2),
 			\buf1mix,buf1mix,
 			\rate,rate,
-			\busDelay,busDelay,
-			\sendDelay,params.at("delaysend"),
-			\busReverb,busReverb,
-			\sendReverb,params.at("reverbsend"),
 		]).onFree({
 			syn.at(note).removeAt(notename);
 		});
@@ -458,6 +485,8 @@ MxSamplesInstrument {
 		buf.keysValuesDo({ arg name,b;
 			b.free;
 		});
+		synOutput.free;
+		busOutput.free;
 	}
 
 }

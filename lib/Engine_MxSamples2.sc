@@ -19,10 +19,10 @@ Engine_MxSamples2 : CroneEngine {
 			mx.noteOn(msg[1].asString,msg[2],msg[3]);
 		});
 
-		this.addCommand("mx_note_onfx","sffffffffff", { arg msg;
+		this.addCommand("mx_note_onfx","sffffffffffffff", { arg msg;
 
 			mx.noteOnFX(msg[1].asString,msg[2],msg[3],
-				//amp,pan,attack,decay,sustain,release,delaysend,reverbsend
+				//amp,pan,attack,decay,sustain,release,delaysend,reverbsend,lpf,lpfrq,hpf,hpfrq
 				msg[4],
 				msg[5],
 				msg[6],
@@ -31,6 +31,10 @@ Engine_MxSamples2 : CroneEngine {
 				msg[9],
 				msg[10],
 				msg[11],
+				msg[12],
+				msg[13],
+				msg[14],
+				msg[15],
 			);
 		});
         

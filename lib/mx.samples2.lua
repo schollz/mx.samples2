@@ -28,7 +28,7 @@ function MxSamples:new(args)
   l:list_instruments()
 
   -- add parameters
-  params:add_group("MX.SAMPLES",19)
+  params:add_group("MX.SAMPLES",21)
   local filter_freq=controlspec.new(20,20000,'exp',0,20000,'Hz')
   -- params:add_option("mxsamples_instrument","instrument",l.instruments)
   params:add {
@@ -85,11 +85,21 @@ function MxSamples:new(args)
   }
   params:add {
     type='control',
+    id="mxsamples_lpfrq_mxsamples",
+    name="hpf rq",
+  controlspec=controlspec.new(0.01,1,'lin',0.01,1,'',0.01/1)}
+  params:add {
+    type='control',
     id='mxsamples_hpf_mxsamples',
     name='high-pass filter',
     controlspec=controlspec.new(20,20000,'exp',0,20,'Hz'),
     formatter=Formatters.format_freq
   }
+  params:add {
+    type='control',
+    id="mxsamples_hpfrq_mxsamples",
+    name="hpf rq",
+  controlspec=controlspec.new(0.01,1,'lin',0.01,1,'',0.01/1)}
   params:add {
     type='control',
     id="mxsamples_reverb_send",
@@ -164,15 +174,18 @@ function MxSamples:on(mx)
   mx.decay=mx.decay or params:get("mxsamples_decay")
   mx.sustain=mx.sustain or params:get("mxsamples_sustain")
   mx.release=mx.release or params:get("mxsamples_release")
-  -- mx.decay=mx.lpf or params:get("mxsamples_lpf_mxsamples"),
-  -- mx.decay=mx.hpf or params:get("mxsamples_hpf_mxsamples"),
+  mx.lpf=mx.lpf or params:get("mxsamples_lpf_mxsamples")
+  mx.lpfrq=mx.lpfrq or params:get("mxsamples_lpfrq_mxsamples")
+  mx.hpf=mx.hpf or params:get("mxsamples_hpf_mxsamples")
+  mx.hpfrq=mx.hpfrq or params:get("mxsamples_hpfrq_mxsamples")
+
   mx.delay_send=mx.delay_send or params:get("mxsamples_delay_send")/100
   mx.reverb_send=mx.reverb_send or params:get("mxsamples_reverb_send")/100
 
   if mx.on then
     engine.mx_note_onfx(mx.name,mx.midi,mx.velocity,
       mx.amp,mx.pan,mx.attack,mx.decay,mx.sustain,mx.release,
-    mx.delay_send,mx.reverb_send)
+    mx.delay_send,mx.reverb_send,mx.lpf,mx.lpfrq,mx.hpf,mx.hpfrq)
   else
     engine.mx_note_off(mx.name,mx.midi)
   end
