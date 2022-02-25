@@ -91,6 +91,21 @@ MxSamples {
 		ins.at(folder).noteOn(note,velocity);
 	}
 
+	setSustain {
+		arg folder, on;
+		if (ins.at(folder).isNil,{
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busDelay.index,busReverb.index));
+		});
+		ins.at(folder).sustain(on);
+	}
+
+	setSustenuto {
+		arg folder, on;
+		if (ins.at(folder).isNil,{
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busDelay.index,busReverb.index));
+		});
+		ins.at(folder).sostenuto(on);
+	}
 
 	noteOnFX {
 		arg folder,note,velocity,

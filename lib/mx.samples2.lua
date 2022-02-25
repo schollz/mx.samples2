@@ -60,7 +60,7 @@ function MxSamples:new(args)
     type='control',
     id="mxsamples_release",
     name="release",
-  controlspec=controlspec.new(0,10,'lin',0,2,'s')}
+  controlspec=controlspec.new(0,10,'lin',0,0.2,'s')}
   params:add {
     type='control',
     id="mxsamples_transpose_midi",
@@ -139,7 +139,8 @@ function MxSamples:new(args)
   params:add_option("mxsamples_scale_velocity","velocity sensitivity",{"delicate","normal","stiff","fixed"},2)
   params:add_option("mxsamples_pedal_mode","pedal mode",{"sustain","sostenuto"},1)
 
-  params:default()
+  params:bang()
+  -- params:default()
 
   return l
 end

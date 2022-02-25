@@ -46,6 +46,13 @@ Engine_MxSamples2 : CroneEngine {
 			mx.setParam(msg[1].asString,msg[2].asString,msg[3]);
 		});
 
+		this.addCommand("mxsamples_sustain", "si", { arg msg;
+			mx.setSustain(msg[1].asString,msg[2]==1);
+		});
+
+		this.addCommand("mxsamples_sustenuto", "si", { arg msg;
+			mx.setSustenuto(msg[1].asString,msg[2]==1);
+		});
         // </mxsamples2>
 	}
 

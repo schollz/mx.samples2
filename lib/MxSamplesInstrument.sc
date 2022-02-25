@@ -379,12 +379,13 @@ MxSamplesInstrument {
 
 	sustain {
 		arg on;
-		if (on==0,{
+		pedalSustainOn=on;
+		if (pedalSustainOn==false,{
 			// release all sustained notes
 			pedalSustainNotes.keysValuesDo({ arg note, val;
 				if (voicesOn.at(note)==nil,{
 					pedalSustainNotes.removeAt(note);
-					noteOff(note);
+					this.noteOff(note);
 				});
 			});
 		}, {
@@ -398,12 +399,13 @@ MxSamplesInstrument {
 
 	sostenuto {
 		arg on;
+		pedalSostenutoOn=on;
 		if (pedalSostenutoOn==false,{
 			// release all sustained notes
 			pedalSostenutoNotes.keysValuesDo({ arg note, val;
 				if (voicesOn.at(note)==nil,{
 					pedalSostenutoNotes.removeAt(note);
-					noteOff(note);
+					this.noteOff(note);
 				});
 			});
 		},{

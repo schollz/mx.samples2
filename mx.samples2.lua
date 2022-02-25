@@ -92,7 +92,7 @@ function init()
   print(cmd)
   os.execute(cmd)
 
-  local mxsamples_=include("mx.samples2/lib/mx.samples2") 
+  local mxsamples_=include("mx.samples2/lib/mx.samples2")
   mxsamples=mxsamples_:new()
   update_uilist()
 
@@ -162,9 +162,9 @@ function setup_midi()
             val=0
           end
           if params:get("mxsamples_pedal_mode")==1 then
-            --engine.mxsamples_sustain(val)
+            engine.mxsamples_sustain(_path.audio.."mx.samples/"..available_instruments[instrument_current].id,val)
           else
-            --engine.mxsamples_sustenuto(val)
+            engine.mxsamples_sustenuto(_path.audio.."mx.samples/"..available_instruments[instrument_current].id,val)
           end
         end
       end
@@ -196,11 +196,11 @@ function update_uilist()
   for i,a in ipairs(available_instruments) do
     available_instruments[i].id=string.gsub(a.name," ","_")
     local downloaded=false
-    if util.file_exists("/home/we/dust/audio/mx.samples/"..available_instruments[i].id) then 
-        local files_for=os.capture("ls /home/we/dust/audio/mx.samples/"..available_instruments[i].id.."/*.wav")
-        if string.find(files_for,".wav") then
+    if util.file_exists("/home/we/dust/audio/mx.samples/"..available_instruments[i].id) then
+      local files_for=os.capture("ls /home/we/dust/audio/mx.samples/"..available_instruments[i].id.."/*.wav")
+      if string.find(files_for,".wav") then
         downloaded=true
-        end
+      end
     end
     local s=a.name
     available_instruments[i].downloaded=downloaded
