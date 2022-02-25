@@ -51,7 +51,7 @@ MxSamples {
 		busDelay = Bus.audio(server,2);
 		busReverb = Bus.audio(server,2);
 		server.sync;
-		synFx = Synth.tail(server,"mxfx",[\out,0,\inDelay,busDelay,\inReverb,busReverb]);
+		// synFx = Synth.tail(server,"mxfx",[\out,0,\inDelay,busDelay,\inReverb,busReverb]);
 
 		// unload old buffers periodically
 		garbageCollector=Routine {
