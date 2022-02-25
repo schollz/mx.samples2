@@ -139,8 +139,7 @@ function MxSamples:new(args)
   params:add_option("mxsamples_scale_velocity","velocity sensitivity",{"delicate","normal","stiff","fixed"},2)
   params:add_option("mxsamples_pedal_mode","pedal mode",{"sustain","sostenuto"},1)
 
-  params:bang()
-  -- params:default()
+  params:default()
 
   return l
 end
@@ -182,6 +181,7 @@ function MxSamples:on(mx)
   mx.lpfrq=mx.lpfrq or params:get("mxsamples_lpfrq_mxsamples")
   mx.hpf=mx.hpf or params:get("mxsamples_hpf_mxsamples")
   mx.hpfrq=mx.hpfrq or params:get("mxsamples_hpfrq_mxsamples")
+  mx.midi=mx.midi+params:get("mxsamples_transpose_midi")
 
   mx.delay_send=mx.delay_send or params:get("mxsamples_delay_send")/100
   mx.reverb_send=mx.reverb_send or params:get("mxsamples_reverb_send")/100
