@@ -151,8 +151,11 @@ function MxSamples:on(mx)
     do return end
   end
   if not util.file_exists(mx.name) then
-    print("MxSamples:on error: name is not folder")
-    do return end
+    mx.name=_path.audio.."mx.samples/"..mx.name
+    if not util.file_exists(mx.name) then
+      print("MxSamples:on error: name is not folder")
+      do return end
+    end
   end
   if mx.midi==nil then
     print("MxSamples:on error: no midi")

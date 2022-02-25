@@ -57,7 +57,7 @@ MxSamplesInstrument {
 			"attack", 0.01,
 			"decay", 0.1,
 			"sustain", 1.0,
-			"release", 1.0,
+			"release", 0.2,
 			"fadetime",0.1,
 			"delaysend",0.0,
 			"reverbsend",0.0,
@@ -102,7 +102,7 @@ MxSamplesInstrument {
 			arg out=0,pan=0,amp=1.0,
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
-			attack=0.01,decay=0.1,sustain=1.0,release=1,gate=1,
+			attack=0.01,decay=0.1,sustain=1.0,release=0.2,gate=1,
 			startPos=0;
 			var snd,snd2;
 			var frames1=BufFrames.ir(buf1);
@@ -122,7 +122,7 @@ MxSamplesInstrument {
 			arg out=0,pan=0,amp=1.0,
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
-			attack=0.01,decay=0.1,sustain=1.0,release=1,gate=1,
+			attack=0.01,decay=0.1,sustain=1.0,release=0.2,gate=1,
 			startPos=0;
 			var snd,snd2;
 			var frames1=BufFrames.ir(buf1);
@@ -132,7 +132,7 @@ MxSamplesInstrument {
 			snd2=PlayBuf.ar(1,buf2,rate,t_trig,startPos:startPos*frames2,doneAction:Select.kr(frames2>frames1,[0,2]));
 			snd=SelectX.ar(buf1mix,[snd2,snd]);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
-			DetectSilence.ar(snd,0.0005,doneAction:2);
+			DetectSilence.ar(snd,0.001,doneAction:2);
 			snd=Pan2.ar(snd,pan,amp);
 			snd=snd/4; // assume ~ 4 note polyphony so reduce max volume
 			Out.ar(out,snd);
