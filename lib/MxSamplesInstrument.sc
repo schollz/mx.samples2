@@ -17,6 +17,7 @@ MxSamplesInstrument {
 
 	var <busDelay;
 	var <busReverb;
+	var <busOut;
 	var busOutput;
 
 	var pedalSustainOn;
@@ -26,18 +27,19 @@ MxSamplesInstrument {
 	var voicesOn;
 
 	*new {
-		arg serverName,folderToSamples,numberMaxSamples,busDelayArg,busReverbArg;
-		^super.new.init(serverName,folderToSamples,numberMaxSamples,busDelayArg,busReverbArg);
+		arg serverName,folderToSamples,numberMaxSamples,busOutArg,busDelayArg,busReverbArg;
+		^super.new.init(serverName,folderToSamples,numberMaxSamples,busOutArg,busDelayArg,busReverbArg);
 	}
 
 	init {
-		arg serverName,folderToSamples,numberMaxSamples,busDelayArg,busReverbArg;
+		arg serverName,folderToSamples,numberMaxSamples,busOutArg,busDelayArg,busReverbArg;
 
 		server=serverName;
 		folder=folderToSamples;
 		maxSamples=numberMaxSamples;
 		busDelay=busDelayArg;
 		busReverb=busReverbArg;
+		busOut=busOutArg;
 		busOutput=Bus.audio(server,2);
 
 		pedalSustainOn=false;
@@ -62,7 +64,7 @@ MxSamplesInstrument {
 			"delaysend",0.0,
 			"reverbsend",0.0,
 			"lpf",18000.0,
-			"lpfrq",1.0,
+			"lpfrq",0.707,
 			"hpf",60.0,
 			"hpfrq",1.0,
 		]);
@@ -148,7 +150,7 @@ MxSamplesInstrument {
 			Out.ar(out,snd);
 			Out.ar(busReverb,snd*sendReverb);
 			Out.ar(busDelay,snd*sendDelay);
-		}.play(target:server, args:[\in, busOutput.index,\busReverb,busReverb,\busDelay,busDelay],addAction:\addToHead);
+		}.play(target:server, args:[\out,busOut, \in, busOutput.index,\busReverb,busReverb,\busDelay,busDelay],addAction:\addToHead);
 
 	}
 
@@ -190,7 +192,13 @@ MxSamplesInstrument {
 	setParam {
 		arg key,value;
 		params.put(key,value);
-		// TODO: check if the parameter is one to set
+		syn.keysValuesDo({arg note,v1;
+			syn.at(note).keysValuesDo({ arg k,v;
+				if (v.isRunning,{
+					v.set(key,value);
+				});
+			});
+		});
 		this.updateOutput;
 	}
 

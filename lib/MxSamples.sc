@@ -8,16 +8,17 @@ MxSamples {
 	var synFx;
 	var busDelay;
 	var busReverb;
+	var busOut;
 	var garbageCollector;
 
 	*new {
-		arg serverName,numberMaxSamples;
-		^super.new.init(serverName,numberMaxSamples);
+		arg serverName,numberMaxSamples,argBusOut;
+		^super.new.init(serverName,numberMaxSamples,argBusOut);
 	}
 
 	init {
-		arg serverName,numberMaxSamples;
-
+		arg serverName,numberMaxSamples,argBusOut;
+		busOut=argBusOut;
 		server=serverName;
 		maxSamples=numberMaxSamples;
 		ins=Dictionary.new();
@@ -78,7 +79,7 @@ MxSamples {
 	setParam {
 		arg folder,key,value;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).setParam(key,value);
 	}
@@ -86,7 +87,7 @@ MxSamples {
 	noteOn {
 		arg folder,note,velocity;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).noteOn(note,velocity);
 	}
@@ -94,7 +95,7 @@ MxSamples {
 	setSustain {
 		arg folder, on;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).sustain(on);
 	}
@@ -102,7 +103,7 @@ MxSamples {
 	setSustenuto {
 		arg folder, on;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).sostenuto(on);
 	}
@@ -114,7 +115,7 @@ MxSamples {
 		delaysend,reverbsend,
 		lpf,lpfrq,hpf,hpfrq;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).noteOnFX(note,velocity,amp,pan,attack,decay,sustain,release,delaysend,reverbsend,lpf,lpfrq,hpf,hpfrq);
 	}
