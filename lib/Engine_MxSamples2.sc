@@ -13,7 +13,7 @@ Engine_MxSamples2 : CroneEngine {
 
 	alloc {
 		// <mxsamples2>
-        mx=MxSamples(Server.default,100);
+	        mx=MxSamples(Server.default,100,0);
 
 		this.addCommand("mx_note_on","sff", { arg msg;
 			mx.noteOn(msg[1].asString,msg[2],msg[3]);
