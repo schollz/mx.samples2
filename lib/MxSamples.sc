@@ -52,7 +52,7 @@ MxSamples {
 		busDelay = Bus.audio(server,2);
 		busReverb = Bus.audio(server,2);
 		server.sync;
-		// synFx = Synth.tail(server,"mxfx",[\out,0,\inDelay,busDelay,\inReverb,busReverb]);
+		synFx = Synth.tail(server,"mxfx",[\out,0,\inDelay,busDelay,\inReverb,busReverb]);
 
 		// unload old buffers periodically
 		garbageCollector=Routine {
@@ -79,7 +79,7 @@ MxSamples {
 	setParam {
 		arg folder,key,value;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).setParam(key,value);
 	}
@@ -87,7 +87,7 @@ MxSamples {
 	noteOn {
 		arg folder,note,velocity;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).noteOn(note,velocity);
 	}
@@ -95,7 +95,7 @@ MxSamples {
 	setSustain {
 		arg folder, on;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).sustain(on);
 	}
@@ -103,7 +103,7 @@ MxSamples {
 	setSustenuto {
 		arg folder, on;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).sostenuto(on);
 	}
@@ -115,7 +115,7 @@ MxSamples {
 		delaysend,reverbsend,
 		lpf,lpfrq,hpf,hpfrq;
 		if (ins.at(folder).isNil,{
-			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut.index,busDelay.index,busReverb.index));
+			ins.put(folder,MxSamplesInstrument(server,folder,maxSamples,busOut,busDelay.index,busReverb.index));
 		});
 		ins.at(folder).noteOnFX(note,velocity,amp,pan,attack,decay,sustain,release,delaysend,reverbsend,lpf,lpfrq,hpf,hpfrq);
 	}
